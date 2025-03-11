@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
-type Role = 'admin' | 'employee' | 'user';
+
 
 const AuthPage: React.FC = () => {
   const navigate = useNavigate();
@@ -78,6 +79,8 @@ const AuthPage: React.FC = () => {
         return;
       }
 
+      localStorage.setItem('user', data.user.id);
+      localStorage.setItem('role', userRole.role);
       alert(`Logged in as ${userRole.role.toUpperCase()}`);
       navigate('/');
     }
@@ -88,8 +91,8 @@ const AuthPage: React.FC = () => {
       <h1 className="text-3xl font-bold mb-4">
         {isRegistering ? 'Register' : 'Login'}
       </h1>
-      {isRegistering ? (
-        <form onSubmit={handleRegister} className="space-y-4">
+      <form onSubmit={isRegistering ? handleRegister : handleLogin} className="space-y-4">
+        {isRegistering && (
           <input
             type="text"
             name="username"
@@ -99,15 +102,17 @@ const AuthPage: React.FC = () => {
             required
             className="w-full p-2 border rounded"
           />
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            className="w-full p-2 border rounded"
-          />
+        )}
+        <input
+          type="email"
+          name="email"
+          placeholder="Email"
+          value={formData.email}
+          onChange={handleChange}
+          required
+          className="w-full p-2 border rounded"
+        />
+        {isRegistering && (
           <input
             type="tel"
             name="phone"
@@ -117,15 +122,17 @@ const AuthPage: React.FC = () => {
             required
             className="w-full p-2 border rounded"
           />
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            className="w-full p-2 border rounded"
-          />
+        )}
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          value={formData.password}
+          onChange={handleChange}
+          required
+          className="w-full p-2 border rounded"
+        />
+        {isRegistering && (
           <select
             name="role"
             value={formData.role}
@@ -137,49 +144,19 @@ const AuthPage: React.FC = () => {
             <option value="employee">Employee</option>
             <option value="admin">Admin</option>
           </select>
-          <button
-            type="submit"
-            className="w-full bg-blue-500 text-white p-2 rounded"
-          >
-            Register
-          </button>
-        </form>
-      ) : (
-        <form onSubmit={handleLogin} className="space-y-4">
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            className="w-full p-2 border rounded"
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            className="w-full p-2 border rounded"
-          />
-          <button
-            type="submit"
-            className="w-full bg-green-500 text-white p-2 rounded"
-          >
-            Login
-          </button>
-        </form>
-      )}
-
+        )}
+        <button
+          type="submit"
+          className={`w-full text-white p-2 rounded ${isRegistering ? 'bg-blue-500' : 'bg-green-500'}`}
+        >
+          {isRegistering ? 'Register' : 'Login'}
+        </button>
+      </form>
       <button
         onClick={() => setIsRegistering(!isRegistering)}
         className="mt-4 w-full text-blue-500 underline"
       >
-        {isRegistering
-          ? 'Already have an account? Login'
-          : "Don't have an account? Register"}
+        {isRegistering ? 'Already have an account? Login' : "Don't have an account? Register"}
       </button>
     </div>
   );

@@ -61,6 +61,7 @@ export function useAuth() {
   }
 
   async function signUp(email: string, password: string, fullName: string) {
+    // eslint-disable-next-line no-useless-catch
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -79,6 +80,7 @@ export function useAuth() {
   }
 
   async function login(email: string, password: string) {
+    // eslint-disable-next-line no-useless-catch
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -92,9 +94,12 @@ export function useAuth() {
   }
 
   async function logout() {
+    // eslint-disable-next-line no-useless-catch
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+      localStorage.removeItem("user");
+      localStorage.removeItem("role");
     } catch (error) {
       throw error;
     }

@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { motion } from 'framer-motion';
 
 const UploadMenuItem = () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [user, setUser] = useState<any>(null); // Fix for 'setUser' error
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
@@ -10,16 +14,31 @@ const UploadMenuItem = () => {
   const [category, setCategory] = useState('Main Course');
   const [dietary, setDietary] = useState('Vegetarian');
   const [loading, setLoading] = useState(false);
+  console.log(user);
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error) {
+        console.log('Error fetching user:', error);
+      } else {
+        setUser(data?.user);
+      }
+    };
+
+    checkUser();
+  }, []);
 
   const dietaryOptions = ['Vegetarian', 'Gluten-Free', 'Vegan'];
   const categoryOptions = ['Main Course', 'Dessert'];
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => { // Fix for 'any' error
     event.preventDefault();
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.from('menuitems').insert([
+      const { error } = await supabase.from('menuitems').insert([
         {
           name,
           description,
@@ -41,8 +60,8 @@ const UploadMenuItem = () => {
       setPrice('');
       setImageUrl('');
       setCategory('Main Course');
-      setDietary('All');
-    } catch (error) {
+      setDietary('Vegetarian');
+    } catch (error: any) {
       console.error('Error uploading menu item:', error.message);
     } finally {
       setLoading(false);

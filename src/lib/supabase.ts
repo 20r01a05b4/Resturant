@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { Database } from './database.types';
+import { Database } from  './database.types';
 
 const supabaseUrl = 'https://bphkddtrpasvupficmhq.supabase.co';
 const supabaseAnonKey =

@@ -1,17 +1,18 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useTheme } from '../contexts/ThemeContext';
-import { useAuth } from '../hooks/useAuth';
-import { Dialog } from '@headlessui/react';
-import { Bars3Icon, XMarkIcon, SunIcon, MoonIcon } from '@heroicons/react/24/outline';
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { useTheme } from "../contexts/ThemeContext";
+import { useAuth } from "../hooks/useAuth";
+import { Dialog } from "@headlessui/react";
+import { Bars3Icon, XMarkIcon, SunIcon, MoonIcon } from "@heroicons/react/24/outline";
 
 const navigation = [
-  { name: 'Home', href: '/' },
-  { name: 'Menu', href: '/menu' },
-  { name: 'Reservation', href: '/reservation' },
-  { name: 'Order', href: '/order' },
-  { name: 'Contact', href: '/contact' },
-  { name: 'Blog', href: '/blog' },
+  { name: "Home", href: "/" },
+  { name: "Menu", href: "/menu" },
+  { name: "Cart", href: "/cart" },
+  { name: "Reservation", href: "/reservation" },
+  { name: "Order", href: "/order" },
+  { name: "Contact", href: "/contact" },
+  { name: "Blog", href: "/blog" },
 ];
 
 export default function Navbar() {
@@ -20,157 +21,117 @@ export default function Navbar() {
   const { user, userRole, logout } = useAuth();
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
-      <nav className="flex items-center justify-between p-6 lg:px-8" aria-label="Global">
-        <div className="flex lg:flex-1">
-          <Link to="/" className="-m-1.5 p-1.5">
-            <span className="text-2xl font-bold bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">
-              Restaurant
-            </span>
-          </Link>
-        </div>
-        <div className="flex lg:hidden">
-          <button
-            type="button"
-            className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700 dark:text-gray-200"
-            onClick={() => setMobileMenuOpen(true)}
-          >
-            <span className="sr-only">Open main menu</span>
-            <Bars3Icon className="h-6 w-6" aria-hidden="true" />
-          </button>
-        </div>
-        <div className="hidden lg:flex lg:gap-x-12">
+    <header className="fixed inset-x-0 top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md shadow-md">
+      <nav className="flex items-center justify-between px-6 py-4 lg:px-12">
+        {/* Logo */}
+        <Link to="/" className="text-2xl font-bold text-transparent bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text">
+          Restaurant
+        </Link>
+
+        {/* Desktop Menu */}
+        <div className="hidden lg:flex items-center gap-x-6">
           {navigation.map((item) => (
             <Link
               key={item.name}
               to={item.href}
-              className="text-sm font-semibold leading-6 text-gray-900 dark:text-gray-100 hover:text-primary-500 dark:hover:text-primary-400 transition-colors"
+              className="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-primary-500 transition duration-300"
             >
               {item.name}
             </Link>
           ))}
+          {userRole === "admin" && (
+            <Link to="/dashboard" className="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-primary-500 transition">
+              Dashboard
+            </Link>
+          )}
         </div>
-        <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:gap-x-6">
-          <button
-            onClick={toggleTheme}
-            className="rounded-full p-1 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-          >
-            {theme === 'dark' ? (
-              <SunIcon className="h-6 w-6" />
-            ) : (
-              <MoonIcon className="h-6 w-6" />
-            )}
+
+        {/* Right Side - Theme Toggle & User Actions */}
+        <div className="flex items-center gap-x-4">
+          {/* Theme Toggle Button (Always Visible) */}
+          <button onClick={toggleTheme} className="p-2 rounded-full text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-800 transition duration-300">
+            {theme === "dark" ? <SunIcon className="h-6 w-6" /> : <MoonIcon className="h-6 w-6" />}
           </button>
-          
+
+          {/* Auth Buttons */}
           {user ? (
             <>
-              {userRole === 'admin' && (
-                <Link
-                  to="/admin"
-                  className="text-sm font-semibold leading-6 text-gray-900 dark:text-gray-100"
-                >
-                  Admin Dashboard
+              {userRole === "admin" && (
+                <Link to="/upload-menu" className="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-primary-500 transition">
+                  Upload Menu
                 </Link>
               )}
-              {userRole === 'employee' && (
-                <Link
-                  to="/employee"
-                  className="text-sm font-semibold leading-6 text-gray-900 dark:text-gray-100"
-                >
-                  Employee Dashboard
-                </Link>
-              )}
-              <button
-                onClick={logout}
-                className="text-sm font-semibold leading-6 text-gray-900 dark:text-gray-100"
-              >
+              <button onClick={logout} className="text-sm font-medium text-red-500 hover:text-red-600 transition">
                 Logout
               </button>
             </>
           ) : (
-            <Link
-              to="/auth"
-              className="text-sm font-semibold leading-6 text-gray-900 dark:text-gray-100"
-            >
-              Log in <span aria-hidden="true">&rarr;</span>
+            <Link to="/auth" className="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-primary-500 transition">
+              Log in →
             </Link>
           )}
         </div>
+
+        {/* Mobile Menu Button */}
+        <button className="lg:hidden p-2 rounded-md text-gray-700 dark:text-gray-200" onClick={() => setMobileMenuOpen(true)}>
+          <Bars3Icon className="h-6 w-6" />
+        </button>
       </nav>
+
+      {/* Mobile Menu */}
       <Dialog as="div" className="lg:hidden" open={mobileMenuOpen} onClose={setMobileMenuOpen}>
-        <div className="fixed inset-0 z-50" />
-        <Dialog.Panel className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white dark:bg-gray-900 px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
-          <div className="flex items-center justify-between">
-            <Link to="/" className="-m-1.5 p-1.5">
-              <span className="text-2xl font-bold bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent">
-                Restaurant
-              </span>
-            </Link>
-            <button
-              type="button"
-              className="-m-2.5 rounded-md p-2.5 text-gray-700 dark:text-gray-200"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <span className="sr-only">Close menu</span>
-              <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm" />
+        <Dialog.Panel className="fixed inset-y-0 right-0 w-64 bg-white dark:bg-gray-900 p-6 shadow-lg">
+          <div className="flex items-center justify-between mb-6">
+            <span className="text-2xl font-bold text-transparent bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text">
+              Restaurant
+            </span>
+            <button onClick={() => setMobileMenuOpen(false)} className="text-gray-700 dark:text-gray-200">
+              <XMarkIcon className="h-6 w-6" />
             </button>
           </div>
-          <div className="mt-6 flow-root">
-            <div className="-my-6 divide-y divide-gray-500/10">
-              <div className="space-y-2 py-6">
-                {navigation.map((item) => (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {item.name}
-                  </Link>
-                ))}
-              </div>
-              <div className="py-6">
-                {user ? (
-                  <>
-                    {userRole === 'admin' && (
-                      <Link
-                        to="/admin"
-                        className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Admin Dashboard
-                      </Link>
-                    )}
-                    {userRole === 'employee' && (
-                      <Link
-                        to="/employee"
-                        className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        Employee Dashboard
-                      </Link>
-                    )}
-                    <button
-                      onClick={() => {
-                        logout();
-                        setMobileMenuOpen(false);
-                      }}
-                      className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
-                    >
-                      Logout
-                    </button>
-                  </>
-                ) : (
-                  <Link
-                    to="/auth"
-                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Log in
+
+          {/* Mobile Menu Links */}
+          <nav className="space-y-4">
+            {navigation.map((item) => (
+              <Link
+                key={item.name}
+                to={item.href}
+                className="block text-gray-900 dark:text-gray-100 text-lg hover:text-primary-500 transition"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {item.name}
+              </Link>
+            ))}
+            {userRole === "admin" && (
+              <Link to="/dashboard" className="block text-lg text-gray-900 dark:text-gray-100 hover:text-primary-500 transition">
+                Dashboard
+              </Link>
+            )}
+          </nav>
+
+          {/* Mobile Menu User Actions */}
+          <div className="mt-6 space-y-4">
+            {user ? (
+              <>
+                {userRole === "admin" && (
+                  <Link to="/upload-menu" className="block text-lg text-gray-900 dark:text-gray-100 hover:text-primary-500 transition">
+                    Upload Menu
                   </Link>
                 )}
-              </div>
-            </div>
+                {/* Mobile Theme Toggle Button */}
+                <button onClick={toggleTheme} className="w-full text-left p-2 rounded-md text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-800 transition">
+                  {theme === "dark" ? "🌞 Light Mode" : "🌙 Dark Mode"}
+                </button>
+                <button onClick={logout} className="w-full text-left text-lg text-red-500 hover:text-red-600 transition">
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link to="/auth" className="block text-lg text-gray-900 dark:text-gray-100 hover:text-primary-500 transition">
+                Log in →
+              </Link>
+            )}
           </div>
         </Dialog.Panel>
       </Dialog>

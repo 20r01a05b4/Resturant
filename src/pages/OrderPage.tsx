@@ -1,33 +1,91 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { supabase } from '../lib/supabase'; // Import Supabase client
+import { supabase } from '../lib/supabase';
+import { User } from '@supabase/supabase-js';
+
+interface CartItem {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+}
 
 const OrderPage: React.FC = () => {
   const navigate = useNavigate();
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    async function fetchCart() {
-      const { data, error } = await supabase.from('cart').select('*');
-      if (error) {
-        console.error('Error fetching cart:', error);
+    async function checkUserAndFetchCart() {
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error || !data?.user) {
+        alert("Please log in first to see your orders.");
+        navigate("/auth");
+        return;
+      }
+      setUser(data.user);
+
+      const { data: cartData, error: cartError } = await supabase
+        .from("cart")
+        .select("*")
+        .eq("user_id", data.user.id);
+
+      if (cartError) {
+        console.error("Error fetching cart:", cartError);
       } else {
-        setCart(data || []);
+        setCart(cartData as CartItem[] || []);
       }
       setLoading(false);
     }
-    fetchCart();
-  }, []);
 
-  // Calculate total amount
-  const subtotal = cart.reduce(
-    (acc, item) => acc + item.price * item.quantity,
-    0
-  );
-  const tax = subtotal * 0.08; // 8% tax
+    checkUserAndFetchCart();
+  }, [navigate]);
+
+  if (loading) return <p className="text-center text-gray-500">Loading...</p>;
+
+  const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const tax = subtotal * 0.08;
   const total = subtotal + tax;
+
+  const handleCheckout = async () => {
+    if (cart.length === 0) {
+      alert("Your cart is empty.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      const orderData = cart.map((item) => ({
+        user_id: user?.id,
+        item_id: item.id,
+        item_name: item.name,
+        quantity: item.quantity,
+        order_date: new Date().toISOString(),
+        delivered: false,
+      }));
+
+      const { error } = await supabase.from("orders").insert(orderData);
+
+      if (error) {
+        console.error("Error placing order:", error);
+        alert("Failed to place order. Please try again.");
+        return;
+      }
+
+      alert("Order placed successfully!");
+      setCart([]);
+      navigate("/menu");
+    } catch (err) {
+      console.error("Checkout error:", err);
+      alert("Something went wrong!");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-6">
@@ -63,7 +121,6 @@ const OrderPage: React.FC = () => {
           )}
         </AnimatePresence>
 
-        {/* Billing Breakdown */}
         <div className="mt-4 border-t pt-4">
           <div className="flex justify-between text-gray-700">
             <span>Subtotal:</span>
@@ -89,9 +146,10 @@ const OrderPage: React.FC = () => {
 
         <button
           className="mt-6 px-4 py-2 bg-blue-500 text-white rounded-lg w-full hover:bg-blue-600 transition-transform transform hover:scale-105"
-          onClick={() => navigate('/checkout')}
+          onClick={handleCheckout}
+          disabled={loading}
         >
-          Proceed to Checkout
+          {loading ? "Processing..." : "Proceed to Checkout"}
         </button>
       </motion.div>
     </div>

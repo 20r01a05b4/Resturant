@@ -3,15 +3,17 @@ import Layout from '../components/Layout';
 import HomePage from '../pages/HomePage';
 import MenuPage from '../pages/MenuPage';
 import ReservationPage from '../pages/ReservationPage';
+import AdminReservationPage from '../pages/admin/AdminReservationPage'; 
 import OrderPage from '../pages/OrderPage';
+import AdminOrderPage from '../pages/admin/AdminOrderPage';  
 import ContactPage from '../pages/ContactPage';
+import AdminContactPage from '../pages/admin/AdminContactPage'; // Import Admin Contact Page
 import BlogPage from '../pages/BlogPage';
 import AdminDashboard from '../pages/admin/Dashboard';
-import EmployeeDashboard from '../pages/employee/Dashboard';
 import AuthPage from '../pages/AuthPage';
-import { useAuth } from '../hooks/useAuth';
 import UploadMenuItem from '../pages/admin/UploadMenuItem';
 import Cart from '../pages/Cart';
+import AdminCartPage from '../pages/admin/AdminCartPage'; 
 
 function PrivateRoute({
   children,
@@ -20,13 +22,14 @@ function PrivateRoute({
   children: React.ReactNode;
   roles?: string[];
 }) {
-  const { user, userRole } = useAuth();
+  const user = localStorage.getItem("user");
+  const userRole = localStorage.getItem("role") ?? "";
 
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
 
-  if (roles && !roles.includes(userRole)) {
+  if (roles && !roles.includes(userRole?.toLowerCase())) {
     return <Navigate to="/" replace />;
   }
 
@@ -34,33 +37,37 @@ function PrivateRoute({
 }
 
 export default function AppRoutes() {
+  const userRole = localStorage.getItem("role") ?? "";
+
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
         <Route index element={<HomePage />} />
         <Route path="menu" element={<MenuPage />} />
-        <Route path="reservation" element={<ReservationPage />} />
-        <Route path="order" element={<OrderPage />} />
-        <Route path="contact" element={<ContactPage />} />
         <Route path="blog" element={<BlogPage />} />
         <Route path="auth" element={<AuthPage />} />
-        <Route path="addMenu" element={<UploadMenuItem />} />
-        <Route path="cart" element={<Cart />} />
 
+        {/* Conditionally render the pages based on user role */}
+        <Route path="order" element={userRole === "admin" ? <AdminOrderPage /> : <OrderPage />} />
+        <Route path="reservation" element={userRole === "admin" ? <AdminReservationPage /> : <ReservationPage />} />
+        <Route path="cart" element={userRole === "admin" ? <AdminCartPage /> : <Cart />} />
+        <Route path="contact" element={userRole === "admin" ? <AdminContactPage /> : <ContactPage />} />
+
+        {/* Admin-only Routes */}
         <Route
-          path="admin/*"
+          path="upload-menu"
           element={
-            <PrivateRoute roles={['admin']}>
-              <AdminDashboard />
+            <PrivateRoute roles={["admin"]}>
+              <UploadMenuItem />
             </PrivateRoute>
           }
         />
 
         <Route
-          path="employee/*"
+          path="dashboard"
           element={
-            <PrivateRoute roles={['employee']}>
-              <EmployeeDashboard />
+            <PrivateRoute roles={["admin"]}>
+              <AdminDashboard />
             </PrivateRoute>
           }
         />

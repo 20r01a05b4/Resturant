@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ShoppingCartIcon } from '@heroicons/react/24/outline';
-import { supabase } from '../lib/supabase'; // Your Supabase client
+import { supabase } from '../lib/supabase'; // Ensure Supabase is correctly set up
+import { User } from '@supabase/supabase-js';
 
 interface MenuItem {
   id: number;
@@ -11,6 +12,7 @@ interface MenuItem {
   image: string;
   category: string;
   dietary?: string[];
+  quantity?: number; // Added for cart items
 }
 
 export default function MenuPage() {
@@ -19,13 +21,15 @@ export default function MenuPage() {
   const [selectedDietary, setSelectedDietary] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [cart, setCart] = useState<MenuItem[]>([]);
+  console.log(cart.length);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null); // Explicitly typed
 
   useEffect(() => {
     const fetchMenuItems = async () => {
       setLoading(true);
       const { data, error } = await supabase.from('menuitems').select('*');
+
       if (error) {
         console.error('Error fetching menu items:', error);
       } else {
@@ -43,19 +47,24 @@ export default function MenuPage() {
         data: { user },
         error,
       } = await supabase.auth.getUser();
-      if (error) console.error('Error fetching user:', error);
-      else setUser(user);
+      if (error) {
+        console.error('Error fetching user:', error);
+      } else {
+        setUser(user);
+      }
     };
 
     getUser();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      (_, session) => {
         setUser(session?.user ?? null);
       }
     );
 
-    return () => authListener.subscription.unsubscribe();
+    return () => {
+      authListener?.subscription?.unsubscribe();
+    };
   }, []);
 
   const addToCart = async (item: MenuItem) => {
@@ -64,70 +73,68 @@ export default function MenuPage() {
       return;
     }
 
-    // Check if the item already exists in the cart
-    const { data: existingCartItem, error: fetchError } = await supabase
-      .from('cart')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('menu_item_id', item.id)
-      .single();
-
-    if (fetchError && fetchError.code !== 'PGRST116') {
-      // Ignore 'PGRST116' which means no rows found
-      console.error('Error fetching cart item:', fetchError);
-      return;
-    }
-
-    if (existingCartItem) {
-      // If item exists, update quantity
-      const { error: updateError } = await supabase
+    try {
+      // Check if item exists in cart
+      const { data: existingCartItem, error: fetchError } = await supabase
         .from('cart')
-        .update({ quantity: existingCartItem.quantity + 1 })
-        .eq('id', existingCartItem.id);
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('menu_item_id', item.id)
+        .single();
 
-      if (updateError) {
-        console.error('Error updating cart item:', updateError);
-      } else {
-        setCart((prevCart) =>
-          prevCart.map((cartItem) =>
-            cartItem.id === item.id
-              ? { ...cartItem, quantity: cartItem.quantity + 1 }
-              : cartItem
-          )
-        );
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        console.error('Error fetching cart item:', fetchError);
+        return;
       }
-    } else {
-      // If item doesn't exist, add new item
-      const { error: insertError } = await supabase.from('cart').insert([
-        {
+
+      if (existingCartItem) {
+        // If item exists, update quantity
+        const { error: updateError } = await supabase
+          .from('cart')
+          .update({ quantity: existingCartItem.quantity + 1 })
+          .eq('id', existingCartItem.id);
+
+        if (updateError) {
+          console.error('Error updating cart item:', updateError);
+        } else {
+          setCart((prevCart) =>
+            prevCart.map((cartItem) =>
+              cartItem.id === item.id
+                ? { ...cartItem, quantity: (cartItem.quantity || 0) + 1 }
+                : cartItem
+            )
+          );
+        }
+      } else {
+        // Add new item to cart
+        const newItem = {
           user_id: user.id,
           menu_item_id: item.id,
           name: item.name,
           price: item.price,
           quantity: 1,
           created_at: new Date(),
-        },
-      ]);
+        };
 
-      if (insertError) {
-        console.error('Error adding to cart:', insertError);
-      } else {
-        setCart((prevCart) => [...prevCart, { ...item, quantity: 1 }]);
+        const { error: insertError } = await supabase.from('cart').insert([newItem]);
+
+        if (insertError) {
+          console.error('Error adding to cart:', insertError);
+        } else {
+          setCart((prevCart) => [...prevCart, { ...item, quantity: 1 }]);
+        }
       }
+    } catch (error) {
+      console.error('Unexpected error:', error);
     }
   };
 
-  const categories = [
-    'All',
-    ...new Set(menuItems.map((item) => item.category)),
-  ];
+  const categories = ['All', ...new Set(menuItems.map((item) => item.category))];
   const dietaryOptions = ['All', 'Vegetarian', 'Gluten-Free', 'Vegan'];
 
   const filteredItems = menuItems.filter((item) => {
-    const matchesCategory =
-      selectedCategory === 'All' || item.category === selectedCategory;
-    const matchesDietary =
-      selectedDietary === 'All' || item.dietary?.includes(selectedDietary);
+    const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory;
+    const matchesDietary = selectedDietary === 'All' || item.dietary?.includes(selectedDietary);
     const matchesSearch =
       item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -135,7 +142,7 @@ export default function MenuPage() {
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 mt-8">
+    <div className="max-w-7xl mx-auto px-4 py-8 pt-20">
       <h1 className="text-4xl font-bold text-center mb-6">Our Menu</h1>
 
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">

@@ -9,17 +9,26 @@ import {
   MinusCircleIcon,
 } from 'lucide-react';
 
+// Define the CartItem type for TypeScript
+type CartItem = {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+  user_id: string;
+};
+
 export default function Cart() {
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
-  const [cart, setCart] = useState([]);
+  const [user, setUser] = useState<{ id: string } | null>(null);
+  const [cart, setCart] = useState<CartItem[]>([]);
 
   useEffect(() => {
     async function fetchUser() {
       const userDetails = await getUser();
       if (!userDetails) {
         alert('Please log in to see your cart.');
-        navigate('/login');
+        navigate('/auth');
         return;
       }
       setUser(userDetails);
@@ -28,15 +37,21 @@ export default function Cart() {
     fetchUser();
   }, []);
 
+  // Fetch cart items based on user ID
   const fetchCart = async (userId: string) => {
     const { data, error } = await supabase
       .from('cart')
       .select('*')
       .eq('user_id', userId);
-    if (error) console.error('Error fetching cart:', error);
-    else setCart(data || []);
+
+    if (error) {
+      console.error('Error fetching cart:', error);
+    } else {
+      setCart(data as CartItem[]);
+    }
   };
 
+  // Update item quantity or delete item from cart
   const updateQuantity = async (id: number, change: number) => {
     if (!user) {
       alert('Please log in to modify your cart.');
@@ -59,6 +74,7 @@ export default function Cart() {
     fetchCart(user.id);
   };
 
+  // Calculate total amount
   const totalAmount = cart.reduce(
     (acc, item) => acc + item.price * item.quantity,
     0
