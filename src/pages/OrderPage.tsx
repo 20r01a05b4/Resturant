@@ -112,7 +112,7 @@ const OrderPage: React.FC = () => {
                   {item.name} x {item.quantity}
                 </span>
                 <span className="font-semibold text-gray-900">
-                  ${(item.price * item.quantity).toFixed(2)}
+                  ₹{(item.price * item.quantity).toFixed(2)}
                 </span>
               </motion.div>
             ))
@@ -124,11 +124,11 @@ const OrderPage: React.FC = () => {
         <div className="mt-4 border-t pt-4">
           <div className="flex justify-between text-gray-700">
             <span>Subtotal:</span>
-            <span>${subtotal.toFixed(2)}</span>
+            <span>₹{subtotal.toFixed(2)}</span>
           </div>
           <div className="flex justify-between text-gray-700">
             <span>Tax (8%):</span>
-            <span>${tax.toFixed(2)}</span>
+            <span>₹{tax.toFixed(2)}</span>
           </div>
           <div className="flex justify-between font-bold text-lg mt-2 text-gray-900">
             <span>Total:</span>
@@ -139,7 +139,7 @@ const OrderPage: React.FC = () => {
               transition={{ duration: 0.3 }}
               className="text-green-600"
             >
-              ${total.toFixed(2)}
+              ₹{total.toFixed(2)}
             </motion.span>
           </div>
         </div>

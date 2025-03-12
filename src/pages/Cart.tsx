@@ -120,7 +120,7 @@ export default function Cart() {
               </motion.button>
             </div>
             <span className="text-lg font-semibold text-gray-800">
-              ${(item.price * item.quantity).toFixed(2)}
+              ₹{(item.price * item.quantity).toFixed(2)}
             </span>
           </motion.div>
         ))}
@@ -133,7 +133,7 @@ export default function Cart() {
           animate={{ scale: 1 }}
           className="text-green-600"
         >
-          ${totalAmount.toFixed(2)}
+          ₹{totalAmount.toFixed(2)}
         </motion.span>
       </div>
 

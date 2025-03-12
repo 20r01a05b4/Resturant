@@ -194,7 +194,7 @@ export default function MenuPage() {
               />
               <h3 className="text-lg font-semibold">{item.name}</h3>
               <p className="text-sm mb-2">{item.description}</p>
-              <p className="text-lg font-bold mb-4">${item.price.toFixed(2)}</p>
+              <p className="text-lg font-bold mb-4">₹{item.price.toFixed(2)}</p>
               <motion.button
                 onClick={() => addToCart(item)}
                 className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition"
