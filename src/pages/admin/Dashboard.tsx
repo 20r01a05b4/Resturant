@@ -29,7 +29,7 @@ const AdminDashboard = () => {
   }, []);
 
   const fetchCustomerData = async () => {
-    const { data, error } = await supabase.from("customers").select("created_at");
+    const { data, error } = await supabase.from("profiles").select("created_at").eq("role","admin");
 
     if (error) {
       console.error("Error fetching customer data:", error);
@@ -64,7 +64,7 @@ const AdminDashboard = () => {
   };
 
   const fetchPopularItems = async () => {
-    const { data, error } = await supabase.from("order_items").select("item_name");
+    const { data, error } = await supabase.from("orders").select("item_name");
 
     if (error) {
       console.error("Error fetching popular items:", error);
